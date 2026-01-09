@@ -1,0 +1,257 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include<locale.h>
+
+/* Структура для элемента списка */
+struct listitem {
+    int number;
+    char name[80];
+    struct listitem* next;
+};
+
+/* Тип для списка */
+typedef struct listitem* List;
+
+/* Прототипы функций */
+void initlist(List* lst);
+void insertfront(List* lst, int val);
+void insertback(List* lst, int val);
+bool isempty(List* lst);
+int length(List lst);
+void destroyItem(List* lst, struct listitem* node);
+struct listitem* getitem(List lst, int n);
+void print_list(List lst);
+
+/* инициализация списка пустым содержимым */
+void initlist(List* lst)
+{
+    *lst = NULL;
+}
+
+/* вставка в начало списка */
+void insertfront(List* lst, int val)
+{
+    struct listitem* new_node;
+
+    new_node = (struct listitem*)malloc(sizeof(struct listitem));
+    if (new_node == NULL)
+    {
+        printf("Ошибка выделения памяти\n");
+        return;
+    }
+
+    new_node->number = val;
+    new_node->name[0] = '\0';
+    new_node->next = *lst;
+    *lst = new_node;
+}
+
+/* вставка в конец списка */
+void insertback(List* lst, int val)
+{
+    struct listitem* new_node, * current;
+
+    new_node = (struct listitem*)malloc(sizeof(struct listitem));
+    if (new_node == NULL)
+    {
+        printf("Ошибка выделения памяти\n");
+        return;
+    }
+
+    new_node->number = val;
+    new_node->name[0] = '\0';
+    new_node->next = NULL;
+
+    if (*lst == NULL)
+    {
+        *lst = new_node;
+        return;
+    }
+
+    current = *lst;
+    while (current->next != NULL)
+    {
+        current = current->next;
+    }
+
+    current->next = new_node;
+}
+
+/* проверяет, является ли список пустым */
+bool isempty(List* lst)
+{
+    if (*lst == NULL)
+        return true;
+    else
+        return false;
+}
+
+/* определение длины списка */
+int length(List lst)
+{
+    int count = 0;
+    struct listitem* current;
+
+    current = lst;
+    while (current != NULL)
+    {
+        count++;
+        current = current->next;
+    }
+
+    return count;
+}
+
+/* удаление заданного узла node из списка */
+void destroyItem(List* lst, struct listitem* node)
+{
+    struct listitem* current, * previous;
+
+    if (*lst == NULL || node == NULL)
+        return;
+
+    if (*lst == node)
+    {
+        *lst = node->next;
+        free(node);
+        return;
+    }
+
+    previous = *lst;
+    current = (*lst)->next;
+
+    while (current != NULL && current != node)
+    {
+        previous = current;
+        current = current->next;
+    }
+
+    if (current == NULL)
+    {
+        printf("Узел не найден\n");
+        return;
+    }
+
+    previous->next = current->next;
+    free(current);
+}
+
+/* нахождение узла со значением n в поле number */
+struct listitem* getitem(List lst, int n)
+{
+    struct listitem* current;
+
+    current = lst;
+    while (current != NULL)
+    {
+        if (current->number == n)
+            return current;
+        current = current->next;
+    }
+
+    return NULL;
+}
+
+/* дополнительная функция для печати списка */
+void print_list(List lst)
+{
+    struct listitem* current;
+    int i = 1;
+
+    printf("Содержимое списка:\n");
+    current = lst;
+
+    while (current != NULL)
+    {
+        printf("%d. number = %d, name = '%s'\n", i, current->number, current->name);
+        current = current->next;
+        i++;
+    }
+
+    if (i == 1)
+        printf("Список пуст\n");
+}
+
+/* главная функция программы */
+int main()
+{
+    setlocale(LC_ALL, "RUS");
+    List mylist;
+    struct listitem* item;
+
+    printf("=== Тестирование односвязного списка ===\n\n");
+
+    printf("1. Инициализация списка\n");
+    initlist(&mylist);
+
+    printf("2. Проверка пустоты: ");
+    if (isempty(&mylist))
+        printf("список пуст\n");
+    else
+        printf("список не пуст\n");
+
+    printf("\n3. Добавление элементов в начало\n");
+    insertfront(&mylist, 10);
+    insertfront(&mylist, 20);
+    insertfront(&mylist, 30);
+    printf("   После добавления:\n");
+    print_list(mylist);
+
+    printf("\n4. Добавление элементов в конец\n");
+    insertback(&mylist, 40);
+    insertback(&mylist, 50);
+    printf("   После добавления:\n");
+    print_list(mylist);
+
+    printf("\n5. Длина списка: %d\n", length(mylist));
+
+    printf("\n6. Поиск элемента с number=20\n");
+    item = getitem(mylist, 20);
+    if (item != NULL)
+    {
+        printf("   Элемент найден: number=%d\n", item->number);
+
+        printf("\n7. Удаление найденного элемента\n");
+        destroyItem(&mylist, item);
+        printf("   После удаления:\n");
+        print_list(mylist);
+        printf("   Новая длина: %d\n", length(mylist));
+    }
+    else
+    {
+        printf("   Элемент не найден\n");
+    }
+
+    printf("\n8. Поиск несуществующего элемента (number=100)\n");
+    item = getitem(mylist, 100);
+    if (item == NULL)
+        printf("   Элемент не найден (правильно)\n");
+
+    printf("\n9. Удаление первого элемента\n");
+    if (mylist != NULL)
+    {
+        destroyItem(&mylist, mylist);
+        printf("   После удаления:\n");
+        print_list(mylist);
+    }
+
+    printf("\n10. Очистка оставшейся памяти\n");
+    while (mylist != NULL)
+    {
+        struct listitem* temp = mylist;
+        mylist = mylist->next;
+        free(temp);
+    }
+
+    printf("\n11. Проверка пустоты в конце: ");
+    if (isempty(&mylist))
+        printf("список пуст\n");
+    else
+        printf("список не пуст\n");
+
+    printf("\n=== Конец тестирования ===\n");
+
+    return 0;
+}
