@@ -1,0 +1,150 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include<locale.h>
+
+/* Структура для элемента списка */
+struct Node {
+    int data;           /* храним число */
+    struct Node* next;  /* указатель на следующий элемент */
+};
+
+/* Функция для создания нового элемента */
+struct Node* createNode(int value) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    if (newNode == NULL) {
+        printf("Ошибка памяти!\n");
+        return NULL;
+    }
+    newNode->data = value;
+    newNode->next = NULL;
+    return newNode;
+}
+
+/* Функция для добавления элемента в конец списка */
+void append(struct Node** head, int value) {
+    struct Node* newNode = createNode(value);
+
+    if (*head == NULL) {
+        *head = newNode;
+        return;
+    }
+
+    struct Node* current = *head;
+    while (current->next != NULL) {
+        current = current->next;
+    }
+    current->next = newNode;
+}
+
+/* Функция для печати списка */
+void printList(struct Node* head) {
+    struct Node* current = head;
+    printf("Список: ");
+    while (current != NULL) {
+        printf("%d ", current->data);
+        current = current->next;
+    }
+    printf("\n");
+}
+
+/* Функция для вычисления среднего арифметического */
+float calculateAverage(struct Node* head) {
+    if (head == NULL) return 0;
+
+    int sum = 0;
+    int count = 0;
+    struct Node* current = head;
+
+    while (current != NULL) {
+        sum += current->data;
+        count++;
+        current = current->next;
+    }
+
+    return (float)sum / count;
+}
+
+/* Функция для удаления элементов больше среднего */
+void deleteGreaterThanAverage(struct Node** head, float average) {
+    struct Node* current = *head;
+    struct Node* prev = NULL;
+
+    while (current != NULL) {
+        if (current->data > average) {
+            /* Если удаляем первый элемент */
+            if (prev == NULL) {
+                *head = current->next;
+                free(current);
+                current = *head;
+            }
+            /* Если удаляем не первый элемент */
+            else {
+                prev->next = current->next;
+                free(current);
+                current = prev->next;
+            }
+        }
+        else {
+            prev = current;
+            current = current->next;
+        }
+    }
+}
+
+/* Функция для освобождения памяти */
+void freeList(struct Node** head) {
+    struct Node* current = *head;
+    struct Node* next;
+
+    while (current != NULL) {
+        next = current->next;
+        free(current);
+        current = next;
+    }
+
+    *head = NULL;
+}
+
+/* Основная функция */
+int main() {
+    setlocale(LC_ALL, "RUS");
+    struct Node* head = NULL;  /* начало списка */
+    int i;
+    float average;
+
+    /* Инициализация генератора случайных чисел */
+    srand(time(NULL));
+
+    printf("=== ПРОГРАММА ДЛЯ РАБОТЫ СО СПИСКОМ ===\n\n");
+
+    /* 1. Создаем список из 10 случайных чисел */
+    printf("1. Создаем список из 10 случайных чисел:\n");
+    for (i = 0; i < 10; i++) {
+        int randomNumber = rand() % 100;  /* числа от 0 до 99 */
+        append(&head, randomNumber);
+    }
+
+    /* 2. Выводим исходный список */
+    printf("2. Исходный список (до преобразования):\n");
+    printList(head);
+
+    /* 3. Вычисляем среднее арифметическое */
+    average = calculateAverage(head);
+    printf("3. Среднее арифметическое: %.2f\n", average);
+
+    /* 4. Удаляем элементы больше среднего */
+    printf("4. Удаляем все элементы больше %.2f\n", average);
+    deleteGreaterThanAverage(&head, average);
+
+    /* 5. Выводим результат */
+    printf("5. Результирующий список (после преобразования):\n");
+    printList(head);
+
+    /* 6. Освобождаем память */
+    freeList(&head);
+
+    printf("\nПрограмма завершена.\n");
+
+    return 0;
+}
